@@ -29,8 +29,10 @@ After installing a new atlas resart Blender to see it in the dropdown
 
 Select an installed atlas from the dropdown list, type in the **acronym** of the target brain structure. A list of all acronyms can be found in the `structures.csv` file, located in the atlas subfolder, created by brainglobe (usually in the home directory in a hidden `.brainglobe` folder – see [documentation](https://brainglobe.info/documentation/bg-atlasapi/usage/using-the-files-directly.html))
 
+<p align="center">
+  <img src="assets/usage.gif" width="1000"
+ </p>
 
-<video src="assets/Usage screen recording.mp4" width=1000></video>
 
 >  **Warning**
 >
