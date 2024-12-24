@@ -1,53 +1,11 @@
 import bpy
 
-
-bl_info = {
-    "name" : "BlenderBrain",
-    "author" : "Artem Kirsanov",
-    "description" : "Import brain meshes via BrainGlobe atlas API",
-    "blender" : (3, 3, 0),
-    "version" : (1, 0, 0),
-    "location" : "View3D > BlenderBrain",
-    "warning" : "",
-    "category" : "3D View"
-}
-
 import importlib
 import subprocess
 import sys
 
 
 # ------------------ Utilities ------------------
-
-
-def check_and_install_modules():
-    '''
-        Automatically install required Python modules
-    '''
-    required_modules_import_names = ["bg_atlasapi", "numpy"]  # Required Python modules
-    required_modules_install_names = ["bg-atlasapi", "numpy"]
-
-
-    missing_modules = []
-    for k,module_name in enumerate(required_modules_import_names):
-        try:
-            print(f"Module {module_name} is already installed. Importing...")
-            importlib.import_module(module_name)
-            
-        except ImportError:
-            missing_modules.append(required_modules_install_names[k])
-            
-    if missing_modules:
-        print("Found missing modules: ", missing_modules)
-        for module in missing_modules: 
-            try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", module])
-                print(f"{module} installed successfully.")
-            except subprocess.CalledProcessError:
-                print(f"Failed to install {module}.")
-
-
-check_and_install_modules()
 import bg_atlasapi
 
 def get_downloaded_atlases_enum_items():
@@ -58,39 +16,25 @@ def get_downloaded_atlases_enum_items():
     return [(name, name, name) for name in names]
 
 
-# def get_available_atlases_enum_items():
-#     '''
-#         Get enum items with all available Brainglobe atlases that you can install
-#     '''
-#     available_atlases = bg_atlasapi.list_atlases.get_all_atlases_lastversions()
+def load_structure_from_obj(filename, object_name="Structure", scale=1e-4, set_origin=False):
+    '''
+        Load a structure from an obj file
+    '''
+    bpy.ops.wm.obj_import(filepath=str(filename), forward_axis='Z', up_axis="NEGATIVE_Y")
 
-#     # Get local atlases:
-#     atlases = bg_atlasapi.list_atlases.get_atlases_lastversions()
-#     available_for_download = []
-    
-#     # Get atlases not yet downloaded:
-#     for atlas in available_atlases.keys():
-#         if atlas not in atlases.keys():
-#             available_for_download.append(str(atlas))
-
-#     return [(name, name, name) for name in available_for_download]
-    
-
-
-def load_structure_from_obj(filename, object_name="Structure", clamp_size=0.01):
-    bpy.ops.wm.obj_import(filepath=str(filename), clamp_size=clamp_size, forward_axis='Z', up_axis="NEGATIVE_Y")
-    bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center="MEDIAN")
     ob = bpy.context.active_object
     ob.name = object_name
-    return ob
-# ------------------ Property Groups ------------------
 
-# class AtlasDownloaderPropertyGroup(bpy.types.PropertyGroup):
-#     ''' Property group for downloading BrainGlode atlases'''
-#     atlas_name : bpy.props.EnumProperty(
-#         name = "Atlas",
-#         items = get_available_atlases_enum_items()
-#     )
+    # Scale the object in all directions
+    ob.scale = (scale, scale, scale)
+
+    if set_origin:
+        bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center="MEDIAN")
+
+    return ob
+
+
+# ------------------ Property Groups ------------------
 
 class RegionLoaderPropertyGroup(bpy.types.PropertyGroup):
     ''' Property group for loading brain region'''
@@ -103,6 +47,21 @@ class RegionLoaderPropertyGroup(bpy.types.PropertyGroup):
     region_name: bpy.props.StringProperty(
         name = "Region name"
     )
+    
+    scale_factor: bpy.props.FloatProperty(
+        name = "Scale",
+        description = "Scaling factor for the imported mesh",
+        default = 1e-4,
+        min = 1e-6,
+        max = 1.0
+    )
+
+    set_origin: bpy.props.BoolProperty(
+        name = "Set origin to geometry",
+        description = "Set the origin of the object to the geometry",
+        default = True
+    )
+
 
 
 # ------------------ Operators ------------------
@@ -134,8 +93,11 @@ class BLENDERBRAIN_OT_RegionLoader(bpy.types.Operator):
     def execute(self, context):
         atlas_name = context.scene.blenderbrain_load_region_props.atlas_name
         region_name = context.scene.blenderbrain_load_region_props.region_name
+        scale_factor = context.scene.blenderbrain_load_region_props.scale_factor
+        set_origin = context.scene.blenderbrain_load_region_props.set_origin
+
         atlas = bg_atlasapi.BrainGlobeAtlas(atlas_name,check_latest=False)
-        load_structure_from_obj(atlas.meshfile_from_structure(region_name),object_name=region_name)
+        load_structure_from_obj(atlas.meshfile_from_structure(region_name),object_name=region_name,scale=scale_factor, set_origin=set_origin)
 
         return {"FINISHED"}
 
@@ -175,6 +137,8 @@ class BLENDERBRAIN_PT_RegionLoader(bpy.types.Panel):
         col = layout.column()
         col.prop(props, "atlas_name")
         col.prop(props, "region_name")
+        col.prop(props, "scale_factor")
+        col.prop(props, "set_origin")
         
         row = layout.row()
         row.operator("blenderbrain.load_region")
