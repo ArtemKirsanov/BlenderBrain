@@ -9,7 +9,7 @@ Easily bring 3D meshes of brain regions from atlases into Blender via [Brainglob
 
 ## Installation
 
-- Install Blender 4.3 or newer: https://www.blender.org/download/ 
+- Install Blender 4.2 or newer: https://www.blender.org/download/ 
 - Download the latest `BlenderBrain.zip` from the Releases section 
 - In Blender go to Edit > Preferences... > Add-ons > Install... open the downloaded ZIP file
 - Enable the addon by going to Edit > Preferences... > Add-ons and enabling "Add Mesh: BlenderBrain"
