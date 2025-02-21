@@ -6,13 +6,13 @@ import sys
 
 
 # ------------------ Utilities ------------------
-import bg_atlasapi
+import brainglobe_atlasapi
 
 def get_downloaded_atlases_enum_items():
     '''
         Get enum items with locally downloaded Brainglobe atlases
     '''
-    names = bg_atlasapi.list_atlases.get_downloaded_atlases()
+    names = brainglobe_atlasapi.list_atlases.get_downloaded_atlases()
     return [(name, name, name) for name in names]
 
 
@@ -96,7 +96,7 @@ class BLENDERBRAIN_OT_RegionLoader(bpy.types.Operator):
         scale_factor = context.scene.blenderbrain_load_region_props.scale_factor
         set_origin = context.scene.blenderbrain_load_region_props.set_origin
 
-        atlas = bg_atlasapi.BrainGlobeAtlas(atlas_name,check_latest=False)
+        atlas = brainglobe_atlasapi.BrainGlobeAtlas(atlas_name,check_latest=False)
         load_structure_from_obj(atlas.meshfile_from_structure(region_name),object_name=region_name,scale=scale_factor, set_origin=set_origin)
 
         return {"FINISHED"}

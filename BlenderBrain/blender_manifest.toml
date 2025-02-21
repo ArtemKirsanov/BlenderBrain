@@ -76,7 +76,7 @@ license = [
 
 [settings]
 python_dependencies = [
-    "bg-atlasapi",
+    "brainglobe-atlasapi",
     "numpy"
 ]
 
